@@ -6,7 +6,7 @@ using OsenoTaskManagementSystem.Services;
 
 namespace OsenoTaskManagementSystem.Controllers
 {
-
+    [Authorize]
     [Controller]
     [Route("api/[controller]")]
     public class TaskController : Controller

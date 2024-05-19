@@ -18,7 +18,7 @@ namespace OsenoTaskManagementSystem.Controllers
             _userService = userService;
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [Route("GetAll")]
         public async Task<List<User>> GetAll()
