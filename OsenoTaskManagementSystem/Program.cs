@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.SignalR;
 using OsenoTaskManagementSystem.Models;
 using OsenoTaskManagementSystem.Services;
 using System.Text;
@@ -11,6 +12,9 @@ builder.Services.Configure<MongoDBSettings>(builder.Configuration.GetSection("Mo
 builder.Services.AddSingleton<MongoDBService>();
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<TaskService>();
+
+//Add SignalR
+builder.Services.AddSignalR();
 
 //Add JWT Authentication
 builder.Services.AddAuthentication(x => {
@@ -76,6 +80,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 

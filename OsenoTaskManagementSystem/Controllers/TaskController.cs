@@ -101,6 +101,11 @@ namespace OsenoTaskManagementSystem.Controllers
         [Route("DeleteTask")]
         public async Task<IActionResult> Delete(string id)
         {
+            var task = GetAll().Result.Where(x => x.Id == id).FirstOrDefault();
+            if (task == null)
+            {
+                return BadRequest("Task does not exist.");
+            }
             await _taskService.DeleteTaskAsync(id);
             return Ok("Task deleted succesfully.");
         }

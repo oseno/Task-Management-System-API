@@ -25,6 +25,10 @@ namespace OsenoTaskManagementSystem.Services
         {
             return await _userCollection.Find(x => x.Id == id).FirstOrDefaultAsync();
         }
+        public async Task<User> GetUserByUserNameAsync(string username)
+        {
+            return await _userCollection.Find(x => x.Username == username).FirstOrDefaultAsync();
+        }
         public async Task<List<User>> GetAllUsersAsync()
         {
             return await _userCollection.Find(new BsonDocument()).ToListAsync();

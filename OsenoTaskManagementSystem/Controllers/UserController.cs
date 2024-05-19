@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Amazon.Runtime.Internal;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using OsenoTaskManagementSystem.Models;
@@ -62,6 +63,28 @@ namespace OsenoTaskManagementSystem.Controllers
             return CreatedAtAction(nameof(GetAll), new { id = user.Id }, user);
         }
 
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("Login")]
+        public async Task<IActionResult> Login(AddUserModel existingUser)
+        {
+            var user = await _userService.GetUserByUserNameAsync(existingUser.Username);
+            if (user != null)
+            {
+                //confirm password
+                var pwd = new AuthService().ComputeHash(existingUser.Password);
+                if(pwd != user.Password)
+                {
+                    return BadRequest("Wrong Password.");
+                }
+                return Ok("Login Successful");
+            }
+            else
+            {
+                // Login failed
+                return Unauthorized();
+            }
+        }
         [AllowAnonymous]
         [HttpPost]
         [Route("GenerateToken")]
