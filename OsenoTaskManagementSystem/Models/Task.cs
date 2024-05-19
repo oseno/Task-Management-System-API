@@ -13,7 +13,6 @@ namespace OsenoTaskManagementSystem.Models
         public string Description { get; set; } = null!;
         public DateTime DateCreated { get; set; }
         public bool IsCompleted { get; set; }
-        public int UserId { get; set; }
     }
     public class AddTaskModel
     {

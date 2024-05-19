@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using OsenoTaskManagementSystem.Models;
 using OsenoTaskManagementSystem.Services;
 
 namespace OsenoTaskManagementSystem.Controllers
 {
+
     [Controller]
     [Route("api/[controller]")]
     public class TaskController : Controller
@@ -22,6 +24,7 @@ namespace OsenoTaskManagementSystem.Controllers
         {
             return await _taskService.GetAllTasksAsync();
         }
+
         [HttpGet]
         [Route("GetById")]
         public async Task<IActionResult> GetById(string id)
@@ -56,8 +59,7 @@ namespace OsenoTaskManagementSystem.Controllers
                 Title = newTask.Title.Trim(),
                 Description = newTask.Description.Trim(),
                 DateCreated = DateTime.Now,
-                IsCompleted = false,
-                UserId = 1
+                IsCompleted = false
             };
             await _taskService.CreateTaskAsync(task);
             return CreatedAtAction(nameof(GetAll), new { id = task.Id }, task);

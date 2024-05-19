@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
 using OsenoTaskManagementSystem.Models;
 using OsenoTaskManagementSystem.Services;
@@ -12,17 +13,20 @@ namespace OsenoTaskManagementSystem.Controllers
     public class UserController : Controller
     {
         private readonly UserService _userService;
-
         public UserController(UserService userService)
         {
             _userService = userService;
         }
+
+        [Authorize]
         [HttpGet]
         [Route("GetAll")]
         public async Task<List<User>> GetAll()
         {
             return await _userService.GetAllUsersAsync();
         }
+
+        [AllowAnonymous]
         [HttpPost]
         [Route("Register")]
         public async Task<IActionResult> RegisterUser(AddUserModel newUser)
@@ -41,7 +45,7 @@ namespace OsenoTaskManagementSystem.Controllers
                         "cannot be less than 3 or greater than 20 characters and cannot contain username.");
                 }
                 //hash password
-                newUser.Password = _userService.ComputeHash(newUser.Password);
+                newUser.Password = new AuthService().ComputeHash(newUser.Password);
             }
             else
             {
@@ -57,11 +61,21 @@ namespace OsenoTaskManagementSystem.Controllers
             await _userService.RegisterAsync(user);
             return CreatedAtAction(nameof(GetAll), new { id = user.Id }, user);
         }
+
+        [AllowAnonymous]
         [HttpPost]
-        [Route("Login")]
-        public void LoginUser()
+        [Route("GenerateToken")]
+        public IActionResult GenerateToken([FromBody] UserTokenModel request)
         {
-            //return NoContent();
+            //confirm that user exists
+            var user = _userService.GetUserByIdAsync(request.UserId);
+            if (user == null) 
+            { 
+                return BadRequest("User does not exist"); 
+            }
+            //create token for existing users
+            var result = new AuthService().GenerateToken(request);
+            return Content(result);
         }
 
     }
