@@ -7,23 +7,24 @@ namespace OsenoTaskManagementSystem.Models
     public class Task
     {
         [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)] 
-        public int Id { get; set; }
-        public string Name { get; set; } = null!;
+        [BsonElement("_id"), BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
+        public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public DateTime DateCreated { get; set; }
         public bool IsCompleted { get; set; }
         public int UserId { get; set; }
-
-        //[BsonId]
-        //[BsonRepresentation(BsonType.ObjectId)]
-        //public string? Id { get; set; }
-
-        //public string username { get; set; } = null!;
-
-        //[BsonElement("items")]
-        //[JsonPropertyName("items")]
-        //public List<string> movieIds { get; set; } = null!;
-
+    }
+    public class AddTaskModel
+    {
+        public string Title { get; set; } = null!;
+        public string Description { get; set; } = null!;
+    }
+    public class UpdateTaskModel
+    {
+        public string? Id { get; set; }
+        public string Title { get; set; } = null!;
+        public string Description { get; set; } = null!;
+        public bool IsCompleted { get; set; }
     }
 }

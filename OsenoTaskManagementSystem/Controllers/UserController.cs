@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using OsenoTaskManagementSystem.Models;
 using OsenoTaskManagementSystem.Services;
+using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks;
 
 namespace OsenoTaskManagementSystem.Controllers
 {
@@ -8,20 +11,58 @@ namespace OsenoTaskManagementSystem.Controllers
     [Route("api/[controller]")]
     public class UserController : Controller
     {
-        private readonly MongoDBService _mongoDBService;
+        private readonly UserService _userService;
 
-        public UserController(MongoDBService mongoDBService)
+        public UserController(UserService userService)
         {
-            _mongoDBService = mongoDBService;
+            _userService = userService;
         }
-
-        //register and login, thats all
+        [HttpGet]
+        [Route("GetAll")]
+        public async Task<List<User>> GetAll()
+        {
+            return await _userService.GetAllUsersAsync();
+        }
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] User task)
+        [Route("Register")]
+        public async Task<IActionResult> RegisterUser(AddUserModel newUser)
         {
-            
+            //validate username and password
+            if ((!string.IsNullOrEmpty(newUser.Username)) && !string.IsNullOrEmpty(newUser.Password))
+            {
+                if(newUser.Username.Length < 3 || newUser.Username.Length > 20 || newUser.Username.Any(char.IsWhiteSpace) || newUser.Username.Any(char.IsSymbol)) 
+                {
+                    return BadRequest("Username cannot contain spaces or symbols and cannot" +
+                        " be less than 3 or greater than 20 characters");
+                }
+                if (newUser.Password.Length < 6 || newUser.Password.Length > 20 || newUser.Password.Contains(newUser.Username) || !newUser.Password.Any(char.IsDigit) || !newUser.Password.Any(char.IsLower) || !newUser.Password.Any(char.IsUpper))
+                {
+                    return BadRequest("Password must have an uppercase letter, a lowercase letter, a number," +
+                        "cannot be less than 3 or greater than 20 characters and cannot contain username.");
+                }
+                //hash password
+                newUser.Password = _userService.ComputeHash(newUser.Password);
+            }
+            else
+            {
+                return BadRequest("Username or password cannot be empty");
+            }
+
+            User user = new User
+            {
+                Username = newUser.Username,
+                Password= newUser.Password,
+                DateCreated= DateTime.Now
+            };
+            await _userService.RegisterAsync(user);
+            return CreatedAtAction(nameof(GetAll), new { id = user.Id }, user);
+        }
+        [HttpPost]
+        [Route("Login")]
+        public void LoginUser()
+        {
+            //return NoContent();
         }
 
-        
     }
 }

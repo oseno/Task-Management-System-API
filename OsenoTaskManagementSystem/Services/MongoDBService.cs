@@ -3,6 +3,8 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using System.Text.Json;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace OsenoTaskManagementSystem.Services;
 
@@ -18,29 +20,13 @@ public class MongoDBService
         _taskCollection = database.GetCollection<Models.Task>(mongoDBSettings.Value.CollectionName);
         _userCollection = database.GetCollection<User>(mongoDBSettings.Value.UserCollection);
     }
-
-    //login and register methods
-    public async Task<List<Models.Task>> GetAsync()
+    public IMongoCollection<Models.Task> GetTaskCollection()
     {
-        return await _taskCollection.Find(new BsonDocument()).ToListAsync();
+        return _taskCollection;
     }
-    public async System.Threading.Tasks.Task CreateAsync(Models.Task task)
+    public IMongoCollection<User> GetUserCollection()
     {
-        await _taskCollection.InsertOneAsync(task);
-        return;
+        return _userCollection;
     }
-    public async System.Threading.Tasks.Task AddToTasksAsync(string id, string movieId)
-    {
-        FilterDefinition<Models.Task> filter = Builders<Models.Task>.Filter.Eq("Id", id);
-        UpdateDefinition<Models.Task> update = Builders<Models.Task>.Update.AddToSet<string>("movieIds", movieId);
-        await _taskCollection.UpdateOneAsync(filter, update);
-        return;
-    }
-    public async System.Threading.Tasks.Task DeleteAsync(string id)
-    {
-        FilterDefinition<Models.Task> filter = Builders<Models.Task>.Filter.Eq("Id", id);
-        await _taskCollection.DeleteOneAsync(filter);
-        return;
-    }
-
+    
 }

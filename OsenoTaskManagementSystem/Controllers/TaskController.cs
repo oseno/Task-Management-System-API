@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
 using OsenoTaskManagementSystem.Models;
 using OsenoTaskManagementSystem.Services;
 
@@ -8,49 +9,98 @@ namespace OsenoTaskManagementSystem.Controllers
     [Route("api/[controller]")]
     public class TaskController : Controller
     {
-        //public IActionResult Index()
-        //{
-        //    return View();
-        //}
-        //do my validations here, nowhere else lol
-        private readonly MongoDBService _mongoDBService;
+        private readonly TaskService _taskService;
 
-        public TaskController(MongoDBService mongoDBService)
+        public TaskController(TaskService taskService)
         {
-            _mongoDBService = mongoDBService;
+            _taskService = taskService;
         }
 
         [HttpGet]
+        [Route("GetAll")]
         public async Task<List<Models.Task>> GetAll()
         {
-            return await _mongoDBService.GetAsync();
+            return await _taskService.GetAllTasksAsync();
         }
         [HttpGet]
-        public async Task<Models.Task> GetById(int id)
+        [Route("GetById")]
+        public async Task<IActionResult> GetById(string id)
         {
             var task = GetAll().Result.Where(x => x.Id == id).FirstOrDefault();
-            return task;
+            if(task == null) { return NotFound(); }
+            return Ok(task);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Models.Task task)
+        [Route("CreateTask")]
+        public async Task<IActionResult> CreateTask(AddTaskModel newTask)
         {
-            await _mongoDBService.CreateAsync(task);
+            if ((!string.IsNullOrEmpty(newTask.Title)) && !string.IsNullOrEmpty(newTask.Description))
+            {
+                if (newTask.Title.Length > 50 || newTask.Title.Any(char.IsSymbol))
+                {
+                    return BadRequest("Task Title cannot contain contain symbols and cannot be greater than 50 characters");
+                }
+                if (newTask.Description.Length > 200 || newTask.Description.Any(char.IsSymbol))
+                {
+                    return BadRequest("Task Description cannot contain contain symbols and cannot be greater than 200 characters");
+                }
+            }
+            else
+            {
+                return BadRequest("Task title or description cannot be empty");
+            }
+
+            Models.Task task = new Models.Task
+            {
+                Title = newTask.Title.Trim(),
+                Description = newTask.Description.Trim(),
+                DateCreated = DateTime.Now,
+                IsCompleted = false,
+                UserId = 1
+            };
+            await _taskService.CreateTaskAsync(task);
             return CreatedAtAction(nameof(GetAll), new { id = task.Id }, task);
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> AddTask(string id, [FromBody] string movieId)
+        [HttpPost]
+        [Route("UpdateTask")]
+        public async Task<IActionResult> UpdateTask(UpdateTaskModel updatedTask)
         {
-            await _mongoDBService.AddToTasksAsync(id, movieId);
-            return NoContent();
+            var task = GetAll().Result.Where(x => x.Id == updatedTask.Id).FirstOrDefault();
+            if (task == null)
+            {
+                return BadRequest("Task does not exist.");
+            }
+            if (!string.IsNullOrEmpty(updatedTask.Title))
+            {
+                if (updatedTask.Title.Length > 50 || updatedTask.Title.Any(char.IsSymbol))
+                {
+                    return BadRequest("Task Title cannot contain contain symbols and cannot be greater than 50 characters");
+                }
+                task.Title = updatedTask.Title.Trim();
+            }
+            if (!string.IsNullOrEmpty(updatedTask.Description))
+            {
+                if (updatedTask.Description.Length > 200 || updatedTask.Description.Any(char.IsSymbol))
+                {
+                    return BadRequest("Task Description cannot contain contain symbols and cannot be greater than 200 characters");
+                }
+                task.Description = updatedTask.Description.Trim();
+            }
+            
+            task.IsCompleted = updatedTask.IsCompleted;
+
+            await _taskService.UpdateTaskAsync(task);
+            return Ok(task);
         }
 
-        [HttpDelete("{id}")]
+        [HttpPost]
+        [Route("DeleteTask")]
         public async Task<IActionResult> Delete(string id)
         {
-            await _mongoDBService.DeleteAsync(id);
-            return NoContent();
+            await _taskService.DeleteTaskAsync(id);
+            return Ok("Task deleted succesfully.");
         }
 
     }
